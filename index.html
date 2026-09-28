@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#176b3a"><meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json"><title>Sawit Patra 100</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f7f4;color:#172018;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:linear-gradient(135deg,#176b3a,#2a9655);color:white;padding:24px 18px;border-radius:0 0 24px 24px}h1{margin:0;font-size:25px}header p{margin:6px 0 0}
+main{max-width:760px;margin:auto;padding:14px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card,form,.item{background:white;border-radius:16px;padding:15px;box-shadow:0 3px 14px #0001}.label,.small{font-size:12px;color:#68736b}.value{font-size:20px;font-weight:700;margin-top:5px}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:14px 0}nav button{border:0;border-radius:12px;padding:11px 3px;background:#e3eee6;color:#176b3a;font-weight:700}nav button.on{background:#176b3a;color:#fff}
+section{display:none}.show{display:block}h2{font-size:19px;margin:16px 2px 10px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:12px;color:#68736b;margin-bottom:5px}input,select,textarea{width:100%;padding:11px;border:1px solid #d6ddd8;border-radius:10px;font-size:15px}textarea{min-height:65px}.full{grid-column:1/-1}
+.primary{width:100%;border:0;border-radius:11px;background:#176b3a;color:#fff;padding:13px;font-weight:700;margin-top:10px}.danger{border:0;border-radius:9px;background:#fbe8e5;color:#b83227;padding:8px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.item{margin:8px 0}.green{color:#176b3a;font-weight:700}.red{color:#b83227;font-weight:700}.empty{text-align:center;color:#68736b;padding:20px}
+footer{text-align:center;color:#68736b;font-size:12px;padding:25px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style></head><body>
+<header><h1>🌴 Sawit Patra 100</h1><p>Pencatatan kebun khusus 100 batang</p></header>
+<main>
+<div class="cards">
+<div class="card"><div class="label">Jumlah Pohon</div><div class="value">100 batang</div></div>
+<div class="card"><div class="label">Total Panen</div><div class="value" id="kg">0 kg</div></div>
+<div class="card"><div class="label">Pendapatan</div><div class="value" id="inc">Rp0</div></div>
+<div class="card"><div class="label">Biaya</div><div class="value" id="cost">Rp0</div></div>
+</div>
+<nav>
+<button class="on" onclick="tab('home',this)">🏠 Beranda</button>
+<button onclick="tab('harvest',this)">🧺 Panen</button>
+<button onclick="tab('expense',this)">💸 Biaya</button>
+<button onclick="tab('report',this)">📊 Rekap</button>
+</nav>
+
+<section id="home" class="show"><div class="card"><h2>Ringkasan</h2>
+<p>Produksi per batang: <b id="perTree">0 kg</b></p><p>Harga rata-rata: <b id="avg">Rp0/kg</b></p>
+<p>Laba bersih: <b class="green" id="profit">Rp0</b></p><p class="small">Data otomatis tersimpan di HP.</p></div></section>
+
+<section id="harvest"><h2>Tambah Panen</h2><form onsubmit="addH(event)"><div class="grid">
+<div><label>Tanggal</label><input id="hd" type="date" required></div>
+<div><label>Berat (kg)</label><input id="hw" type="number" min="0" step=".1" required></div>
+<div><label>Harga TBS (Rp/kg)</label><input id="hp" type="number" min="0" required></div>
+<div><label>Batang dipanen</label><input id="ht" type="number" min="1" max="100" value="100" required></div>
+<div class="full"><label>Catatan</label><textarea id="hn"></textarea></div></div>
+<button class="primary">Simpan Panen</button></form><h2>Riwayat Panen</h2><div id="hl"></div></section>
+
+<section id="expense"><h2>Tambah Biaya</h2><form onsubmit="addE(event)"><div class="grid">
+<div><label>Tanggal</label><input id="ed" type="date" required></div>
+<div><label>Jenis</label><select id="et"><option>Pupuk</option><option>Upah</option><option>Transportasi</option><option>Perawatan</option><option>Lainnya</option></select></div>
+<div class="full"><label>Nominal (Rp)</label><input id="ea" type="number" min="0" required></div>
+<div class="full"><label>Catatan</label><textarea id="en"></textarea></div></div>
+<button class="primary">Simpan Biaya</button></form><h2>Riwayat Biaya</h2><div id="el"></div></section>
+
+<section id="report"><h2>Rekap</h2><div class="card">
+<p>Total produksi: <b id="rkg">0 kg</b></p><p>Total penjualan: <b id="rinc">Rp0</b></p><p>Total biaya: <b id="rcost">Rp0</b></p><p>Laba bersih: <b class="green" id="rprofit">Rp0</b></p></div>
+<h2>Produksi per Bulan</h2><div id="months"></div><button class="danger" onclick="wipe()">Hapus semua data</button></section>
+</main><footer>Sawit Patra 100 • 100 batang</footer>
+<script>
+const K="sawit100";let d=JSON.parse(localStorage.getItem(K)||'{"h":[],"e":[]}');
+const R=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0);
+const $=id=>document.getElementById(id);const today=()=>new Date().toISOString().slice(0,10);
+$("hd").value=today();$("ed").value=today();
+function tab(id,b){document.querySelectorAll("section").forEach(x=>x.classList.remove("show"));$(id).classList.add("show");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));b.classList.add("on")}
+function save(){localStorage.setItem(K,JSON.stringify(d));render()}
+function addH(e){e.preventDefault();d.h.unshift({id:Date.now(),date:$("hd").value,w:+$("hw").value,p:+$("hp").value,t:+$("ht").value,n:$("hn").value});e.target.reset();$("hd").value=today();$("ht").value=100;save()}
+function addE(e){e.preventDefault();d.e.unshift({id:Date.now(),date:$("ed").value,t:$("et").value,a:+$("ea").value,n:$("en").value});e.target.reset();$("ed").value=today();save()}
+function delH(id){d.h=d.h.filter(x=>x.id!==id);save()}function delE(id){d.e=d.e.filter(x=>x.id!==id);save()}
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function wipe(){if(confirm("Hapus semua data panen dan biaya?")){d={h:[],e:[]};save()}}
+function render(){
+ let kg=d.h.reduce((s,x)=>s+x.w,0),inc=d.h.reduce((s,x)=>s+x.w*x.p,0),cost=d.e.reduce((s,x)=>s+x.a,0);
+ $("kg").textContent=kg.toLocaleString("id-ID")+" kg";$("inc").textContent=R(inc);$("cost").textContent=R(cost);$("profit").textContent=R(inc-cost);
+ $("perTree").textContent=(kg/100).toFixed(1)+" kg";$("avg").textContent=R(kg?inc/kg:0)+"/kg";
+ $("rkg").textContent=kg.toLocaleString("id-ID")+" kg";$("rinc").textContent=R(inc);$("rcost").textContent=R(cost);$("rprofit").textContent=R(inc-cost);
+ $("hl").innerHTML=d.h.length?d.h.map(x=>`<div class="item"><div class="row"><b>${esc(x.date)}</b><button class="danger" onclick="delH(${x.id})">Hapus</button></div><div>${x.w.toLocaleString("id-ID")} kg × ${R(x.p)}/kg = <b>${R(x.w*x.p)}</b></div><div class="small">${x.t} batang${x.n?" • "+esc(x.n):""}</div></div>`).join(""):'<div class="empty">Belum ada data panen.</div>';
+ $("el").innerHTML=d.e.length?d.e.map(x=>`<div class="item"><div class="row"><b>${esc(x.t)}</b><button class="danger" onclick="delE(${x.id})">Hapus</button></div><div class="red">${R(x.a)}</div><div class="small">${esc(x.date)}${x.n?" • "+esc(x.n):""}</div></div>`).join(""):'<div class="empty">Belum ada data biaya.</div>';
+ let m={};d.h.forEach(x=>m[x.date.slice(0,7)]=(m[x.date.slice(0,7)]||0)+x.w);
+ $("months").innerHTML=Object.keys(m).sort().reverse().map(k=>`<div class="item"><div class="row"><b>${k}</b><span class="green">${m[k].toLocaleString("id-ID")} kg</span></div></div>`).join("")||'<div class="empty">Belum ada rekap.</div>';
+}
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});render();
+</script></body></html>
